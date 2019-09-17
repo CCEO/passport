@@ -2,10 +2,12 @@
 
 namespace Laravel\Passport;
 
+use Hyn\Tenancy\Traits\UsesTenantConnection;
 use Illuminate\Database\Eloquent\Model;
 
 class Token extends Model
 {
+    use UsesTenantConnection;
     /**
      * The database table used by the model.
      *
