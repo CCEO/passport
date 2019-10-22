@@ -61,14 +61,13 @@ class RefreshTokenRepository implements RefreshTokenRepositoryInterface
      */
     public function persistNewRefreshToken(RefreshTokenEntityInterface $refreshTokenEntity)
     {
-        $this->database->table('oauth_refresh_tokens')->insert([
+        PassportRefreshToken::create([
             'id' => $id = $refreshTokenEntity->getIdentifier(),
             'access_token_id' => $accessTokenId = $refreshTokenEntity->getAccessToken()->getIdentifier(),
             'revoked' => false,
             'expires_at' => $refreshTokenEntity->getExpiryDateTime(),
         ]);
-
-        $this->events->fire(new RefreshTokenCreated($id, $accessTokenId));
+        $this->events->dispatch(new RefreshTokenCreated($id, $accessTokenId));
     }
 
     /**
@@ -76,8 +75,7 @@ class RefreshTokenRepository implements RefreshTokenRepositoryInterface
      */
     public function revokeRefreshToken($tokenId)
     {
-        $this->database->table('oauth_refresh_tokens')
-                    ->where('id', $tokenId)->update(['revoked' => true]);
+        PassportRefreshToken::where('id', $tokenId)->update(['revoked' => true]);
     }
 
     /**
@@ -85,15 +83,7 @@ class RefreshTokenRepository implements RefreshTokenRepositoryInterface
      */
     public function isRefreshTokenRevoked($tokenId)
     {
-        $refreshToken = $this->database->table('oauth_refresh_tokens')
-                    ->where('id', $tokenId)->first();
-
-        if ($refreshToken === null || $refreshToken->revoked) {
-            return true;
-        }
-
-        return $this->tokens->isAccessTokenRevoked(
-            $refreshToken->access_token_id
-        );
+        $refreshToken = PassportRefreshToken::where('id', $tokenId)->first();
+        return $refreshToken === null || $refreshToken->revoked;
     }
 }
